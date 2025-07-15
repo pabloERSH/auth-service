@@ -1,8 +1,8 @@
 from ..models import TelegramUser
-from tg_parser import TelegramDataParser
+from .tg_parser import TelegramDataParser
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-from ...auth_service import settings
+from django.conf import settings
 from django.middleware import csrf
 from rest_framework_simplejwt.exceptions import TokenError
 
