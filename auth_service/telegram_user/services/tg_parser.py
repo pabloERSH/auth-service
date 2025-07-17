@@ -17,13 +17,12 @@ class TelegramDataParser:
     INITDATA_MAX_AGE = timedelta(days=1)
 
     @classmethod
-    def _check_hash(cls, initData: str, bot_token: str) -> bool:
+    def _check_hash(cls, parsedData: dict, bot_token: str) -> bool:
         """Проверяет наличие и подлинность хэша в WebAppInitData Telegram Mini App."""
         try:
-            parsedData = parse_qs(initData)
             if 'hash' not in parsedData.keys():
-                raise KeyError("Invalid WebAppInitData format: doesn't have a \'hash\' field")
-            
+                raise KeyError("WebAppInitData doesn't have a \'hash\' field")
+
             received_hash = parsedData['hash'][0]
             filtered_data ={k: v[0] for k, v in parsedData.items() if k != 'hash'}
             data_check_string = '\n'.join(f"{k}={v}" for k, v in sorted(filtered_data.items()))
@@ -41,13 +40,15 @@ class TelegramDataParser:
             ).hexdigest()
 
             return computed_hash == received_hash
-        except Exception as e:
-            raise ValidationError(f"Hash check failed: {e}")
+        except (IndexError, AttributeError) as e:
+            raise ValidationError(f"Invalid hash data format: {e}")
+        except (UnicodeEncodeError, TypeError) as e:
+            raise ValidationError(f"Encoding error during hash validation: {e}")
 
     
     @classmethod
     def _validate_and_parse(cls, initData: str) -> dict:
-        """Общая валидация для всех методов парсинга."""
+        """Общая валидация WebAppInitData для всех методов парсинга."""
         try:
             bot_token = os.getenv('BOT_TOKEN')
             if not bot_token:
@@ -55,11 +56,11 @@ class TelegramDataParser:
 
             parsedData = parse_qs(initData)
 
-            auth_date = int(parsedData.get('auth_date', [0])[0])
+            auth_date = int(parsedData.get('auth_date')[0])
             if datetime.now() - datetime.fromtimestamp(auth_date) > cls.INITDATA_MAX_AGE:
                 raise ValidationError("initData is too old")
 
-            if not cls._check_hash(initData, bot_token):
+            if not cls._check_hash(parsedData, bot_token):
                 raise ValidationError("Invalid hash signature")
             
             return parsedData
@@ -67,6 +68,8 @@ class TelegramDataParser:
             raise ValidationError(f"Missing required field: {e}")
         except ValueError as e:
             raise ValidationError(f"Invalid data format: {e}")
+        except AttributeError as e:
+            raise ValidationError(f"Invalid input data: {e}")
 
     
     @classmethod
@@ -78,13 +81,7 @@ class TelegramDataParser:
         try:
             parsedData = cls._validate_and_parse(initData)
 
-            if 'user' not in parsedData.keys():
-                raise KeyError("Invalid initData format: doesn't have a \'user\' field")
-
             userData = json.loads(parsedData['user'][0])
-
-            if 'id' not in userData:
-                raise ValidationError("User ID is required for authentication")
 
             return {
                 'telegram_id': userData['id'],
@@ -93,6 +90,8 @@ class TelegramDataParser:
                 'username': userData.get('username', '')
             }
         except json.JSONDecodeError as e:
-            raise ValidationError(f"Invalid user data: {e}")
-        except Exception as e:
-            raise ValidationError(f"Parsing initData failed: {e}")
+            raise ValidationError(f"Invalid user data JSON: {e}")
+        except IndexError as e:
+            raise ValidationError(f"Invalid user data format: {e}")
+        except KeyError as e:
+            raise ValidationError(f"Missing required user field: {e}")

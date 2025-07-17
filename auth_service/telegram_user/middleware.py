@@ -19,3 +19,4 @@ class JWTAuthMiddleware(MiddlewareMixin):
                 request.user = jwt_auth.get_user(validated_token)
             except AuthenticationFailed:
                 pass  # Пользователь не аутентифицирован
+            

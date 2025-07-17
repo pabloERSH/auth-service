@@ -59,7 +59,7 @@ class TelegramUserRefreshTokenView(APIView):
             new_tokens = TelegramUserAuthService.refresh_user_token(refresh_token)
 
             response = Response(
-                {'message': "Tokens succesfully refreshed"},
+                {'message': "Tokens successfully refreshed"},
                 status=status.HTTP_200_OK
                 )
 
@@ -69,7 +69,7 @@ class TelegramUserRefreshTokenView(APIView):
         except Exception as e:
             return Response(
                 {'error': str(e),
-                 'msg': 'Refresh tokens failed!'}, 
+                 'message': 'Refresh tokens failed!'}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
@@ -88,3 +88,4 @@ class TelegramUserLogoutView(APIView):
         response.delete_cookie('csrftoken')
         
         return response
+    

@@ -5,6 +5,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from django.middleware import csrf
 from rest_framework_simplejwt.exceptions import TokenError
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, DatabaseError
 
 
 class TelegramUserAuthService:
@@ -27,8 +29,12 @@ class TelegramUserAuthService:
             ) 
 
             return user
-        except Exception as e:
-            raise AuthenticationFailed(f"Authentication failed: {e}")
+        except ValidationError as e:
+            raise AuthenticationFailed(f"Telegram data validation failed: {e}")
+        except IntegrityError as e:
+            raise AuthenticationFailed(f"Database integrity error: {e}")
+        except DatabaseError as e:
+            raise AuthenticationFailed(f"Database operation failed: {e}")
         
     @classmethod
     def generate_jwt_token(cls, user: TelegramUser) -> dict:
@@ -97,4 +103,3 @@ class TelegramUserAuthService:
             return new_tokens
         except TokenError as e:
             raise TokenError(f"Refresh user token failed: {e}")
-        
