@@ -20,11 +20,13 @@ from django.core.exceptions import ImproperlyConfigured
 load_dotenv()
 
 
-def get_env_variable(var_name):
+def get_env_variable(var_name, default=None):
     value = os.getenv(var_name)
-    if not value:
-        raise ImproperlyConfigured(f"Set the {var_name} environment variable")
-    return value
+    if value is not None:
+        return value
+    if default is not None:
+        return default
+    raise ImproperlyConfigured(f"Set the {var_name} environment variable")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -206,12 +208,12 @@ LOGGING = {
     'loggers': {
         'telegram_user': {
             'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
+            'level': 'DEBUG' if DEBUG else 'WARNING',
             'propagate': False,
         },
         'django': {
             'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'level': 'WARNING',
             'propagate': False,
         },
     },

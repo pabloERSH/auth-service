@@ -7,12 +7,14 @@ from django.middleware import csrf
 from rest_framework_simplejwt.exceptions import TokenError
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, DatabaseError
+import logging
+
+
+logger = logging.getLogger('telegram_user')
 
 
 class TelegramUserAuthService:
     """Класс для аутентификации Telegram пользователей и управления JWT токенами."""
-    
-    
     @classmethod
     def authenticate(cls, initData: str) -> TelegramUser:
         """Валидация initData и получение данных пользователя или его создание/изменение"""
@@ -30,15 +32,22 @@ class TelegramUserAuthService:
 
             return user
         except ValidationError as e:
+            logger.error(f"Telegram data validation failed: {e}")
             raise AuthenticationFailed(f"Telegram data validation failed: {e}")
         except IntegrityError as e:
+            logger.error(f"Database integrity error: {e}")
             raise AuthenticationFailed(f"Database integrity error: {e}")
         except DatabaseError as e:
+            logger.error(f"Database operation failed: {e}")
             raise AuthenticationFailed(f"Database operation failed: {e}")
         
     @classmethod
     def generate_jwt_token(cls, user: TelegramUser) -> dict:
         """Генерация JWT пары (access + refresh)"""
+        if not isinstance(user, TelegramUser):
+            logger.error(f"Expected TelegramUser, got {type(user)}")
+            raise TypeError("user must be a TelegramUser")
+
         refresh = RefreshToken.for_user(user)
 
         refresh['telegram_id'] = user.telegram_id
@@ -51,37 +60,40 @@ class TelegramUserAuthService:
     @classmethod
     def set_auth_cookies(cls, response, tokens: dict) -> None:
         """Устанавливает JWT + CSRF cookies с настройками из settings.py"""
-        
-        # Access Token
-        response.set_cookie(
-            key=settings.SIMPLE_JWT['AUTH_COOKIE'],
-            value=tokens['access'],
-            httponly=True,
-            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-            samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
-            max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
-            path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH']
-        )
+        try:
+            # Access Token
+            response.set_cookie(
+                key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+                value=tokens['access'],
+                httponly=True,
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
+                max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
+                path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH']
+            )
 
-        # Refresh Token
-        response.set_cookie(
-            key=settings.SIMPLE_JWT['REFRESH_COOKIE'],
-            value=tokens['refresh'],
-            httponly=True,
-            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-            samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
-            max_age=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds(),
-            path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH']
-        )
+            # Refresh Token
+            response.set_cookie(
+                key=settings.SIMPLE_JWT['REFRESH_COOKIE'],
+                value=tokens['refresh'],
+                httponly=True,
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
+                max_age=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds(),
+                path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH']
+            )
 
-        # CSRF Token
-        response.set_cookie(
-            key='csrftoken',
-            value=csrf.get_token(response.request),
-            secure=settings.CSRF_COOKIE_SECURE,
-            samesite='Strict',
-            httponly=False
-        )
+            # CSRF Token
+            response.set_cookie(
+                key='csrftoken',
+                value=csrf.get_token(response.request),
+                secure=settings.CSRF_COOKIE_SECURE,
+                samesite='Strict',
+                httponly=False
+            )
+        except KeyError as e:
+            logger.error(f"Set auth cookies failed: {e}")
+            raise ValidationError(f"Set auth cookies failed: {e}")
 
     @classmethod
     def logout(cls, response) -> None:
@@ -102,4 +114,5 @@ class TelegramUserAuthService:
             new_tokens = cls.generate_jwt_token(user)
             return new_tokens
         except TokenError as e:
+            logger.error(f"Refresh user token failed: {e}")
             raise TokenError(f"Refresh user token failed: {e}")

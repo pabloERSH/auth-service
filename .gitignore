@@ -14,3 +14,6 @@ wheels/
 
 # IDE
 .idea/
+
+# Logs
+auth_service/logs/

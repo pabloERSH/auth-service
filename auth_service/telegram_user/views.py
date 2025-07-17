@@ -4,6 +4,10 @@ from rest_framework import status
 from .services.tg_user_auth import TelegramUserAuthService
 from django.conf import settings
 from rest_framework.permissions import IsAuthenticated, AllowAny
+import logging
+
+
+logger = logging.getLogger('telegram_user')
 
 
 class TelegramUserAuthView(APIView):
@@ -12,13 +16,14 @@ class TelegramUserAuthView(APIView):
 
     def post(self, request):
         """Аутентификация через Telegram Mini App"""
-        if not (init_data := request.data.get('initData')):
-            return Response(
-                {'error': 'initData required'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
         try:
+            if not (init_data := request.data.get('initData')):
+                logger.critical("initData has not been sent")
+                return Response(
+                    {'error': 'initData required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
             user = TelegramUserAuthService.authenticate(init_data)
             tokens = TelegramUserAuthService.generate_jwt_token(user)
 
@@ -36,6 +41,7 @@ class TelegramUserAuthView(APIView):
 
             return response
         except Exception as e:
+            logger.error(f"Authentication failed: {e}")
             return Response(
                 {'error': str(e),
                  'message': 'Authentication failed!'}, 
@@ -47,15 +53,16 @@ class TelegramUserRefreshTokenView(APIView):
 
     """Обновление JWT токенов"""
     def post(self, request):
-        refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['REFRESH_COOKIE'])
-
-        if not refresh_token:
-            return Response(
-                {'error': 'Refresh token is missing'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         try:
+            refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['REFRESH_COOKIE'])
+
+            if not refresh_token:
+                logger.error("Refresh token has not been sent!")
+                return Response(
+                    {'error': 'Refresh token is missing'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             new_tokens = TelegramUserAuthService.refresh_user_token(refresh_token)
 
             response = Response(
@@ -67,6 +74,7 @@ class TelegramUserRefreshTokenView(APIView):
             
             return response
         except Exception as e:
+            logger.error(f'Refresh tokens failed: {e}')
             return Response(
                 {'error': str(e),
                  'message': 'Refresh tokens failed!'}, 

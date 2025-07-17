@@ -6,9 +6,11 @@ import hmac
 import hashlib
 from datetime import datetime, timedelta
 import json
+import logging
 
 
 load_dotenv()
+logger = logging.getLogger('telegram_user')
 
 
 class TelegramDataParser:
@@ -21,6 +23,7 @@ class TelegramDataParser:
         """Проверяет наличие и подлинность хэша в WebAppInitData Telegram Mini App."""
         try:
             if 'hash' not in parsedData.keys():
+                logger.error("WebAppInitData doesn't have a \'hash\' field")
                 raise KeyError("WebAppInitData doesn't have a \'hash\' field")
 
             received_hash = parsedData['hash'][0]
@@ -41,8 +44,10 @@ class TelegramDataParser:
 
             return computed_hash == received_hash
         except (IndexError, AttributeError) as e:
+            logger.error(f"Invalid hash data format: {e}")
             raise ValidationError(f"Invalid hash data format: {e}")
         except (UnicodeEncodeError, TypeError) as e:
+            logger.error(f"Encoding error during hash validation: {e}")
             raise ValidationError(f"Encoding error during hash validation: {e}")
 
     
@@ -52,23 +57,29 @@ class TelegramDataParser:
         try:
             bot_token = os.getenv('BOT_TOKEN')
             if not bot_token:
+                logger.critical("BOT_TOKEN is not configured")
                 raise ValidationError("BOT_TOKEN is not configured")
 
             parsedData = parse_qs(initData)
 
             auth_date = int(parsedData.get('auth_date')[0])
             if datetime.now() - datetime.fromtimestamp(auth_date) > cls.INITDATA_MAX_AGE:
+                logger.warning("initData is too old")
                 raise ValidationError("initData is too old")
 
             if not cls._check_hash(parsedData, bot_token):
+                logger.warning("Invalid hash signature received")
                 raise ValidationError("Invalid hash signature")
             
             return parsedData
         except KeyError as e:
+            logger.error(f"Missing required field: {e}")
             raise ValidationError(f"Missing required field: {e}")
         except ValueError as e:
+            logger.error(f"Invalid data format: {e}")
             raise ValidationError(f"Invalid data format: {e}")
         except AttributeError as e:
+            logger.error(f"Invalid input data: {e}")
             raise ValidationError(f"Invalid input data: {e}")
 
     
@@ -90,8 +101,11 @@ class TelegramDataParser:
                 'username': userData.get('username', '')
             }
         except json.JSONDecodeError as e:
+            logger.error(f"Invalid user data JSON: {e}")
             raise ValidationError(f"Invalid user data JSON: {e}")
         except IndexError as e:
+            logger.error(f"Invalid user data format: {e}")
             raise ValidationError(f"Invalid user data format: {e}")
         except KeyError as e:
+            logger.error(f"Missing required user field: {e}")
             raise ValidationError(f"Missing required user field: {e}")
