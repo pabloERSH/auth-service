@@ -25,5 +25,11 @@ class TelegramUser (TimeStampedModel):
     last_name = models.CharField(max_length=255, blank=True, null=True)
     username = models.CharField(max_length=255, blank=True, null=True)
 
+    class Meta:
+        db_table = 'auth_telegram_user'
+        indexes = [
+            models.Index(fields=['telegram_id'], name='telegram_user_telegram_id_idx'),
+        ]
+
     def __str__(self):
         return f"tg_id={self.telegram_id} first_name={self.first_name} last_name={self.last_name} username={self.username}"
