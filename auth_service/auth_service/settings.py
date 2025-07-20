@@ -162,12 +162,12 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     
     # Cookie settings
-    'AUTH_COOKIE': 'access_token',
-    'REFRESH_COOKIE': 'refresh_token',
-    'AUTH_COOKIE_PATH': '/',
-    'AUTH_COOKIE_SECURE': True,
-    'AUTH_COOKIE_HTTP_ONLY': True,
-    'AUTH_COOKIE_SAMESITE': 'Strict',
+    # 'AUTH_COOKIE': 'access_token',
+    # 'REFRESH_COOKIE': 'refresh_token',
+    # 'AUTH_COOKIE_PATH': '/',
+    # 'AUTH_COOKIE_SECURE': True,
+    # 'AUTH_COOKIE_HTTP_ONLY': True,
+    # 'AUTH_COOKIE_SAMESITE': 'Strict',
 }
 
 # CSRF
