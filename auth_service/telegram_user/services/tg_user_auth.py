@@ -16,7 +16,7 @@ logger = logging.getLogger('telegram_user')
 class TelegramUserAuthService:
     """Класс для аутентификации Telegram пользователей и управления JWT токенами."""
     @classmethod
-    def authenticate(cls, initData: str) -> TelegramUser:
+    def authenticate(cls, initData: str, response) -> tuple:
         """Валидация initData и получение данных пользователя или его создание/изменение"""
         try:
             userData = TelegramDataParser.parse_userData(initData)
@@ -30,7 +30,9 @@ class TelegramUserAuthService:
                 }
             ) 
 
-            return user
+            tokens = cls._generate_jwt_token(user)
+
+            return (user, tokens)
         except ValidationError as e:
             logger.error(f"Telegram data validation failed: {e}")
             raise AuthenticationFailed(f"Telegram data validation failed: {e}")
@@ -42,7 +44,7 @@ class TelegramUserAuthService:
             raise AuthenticationFailed(f"Database operation failed: {e}")
         
     @classmethod
-    def generate_jwt_token(cls, user: TelegramUser) -> dict:
+    def _generate_jwt_token(cls, user: TelegramUser) -> dict:
         """Генерация JWT пары (access + refresh)"""
         if not isinstance(user, TelegramUser):
             logger.error(f"Expected TelegramUser, got {type(user)}")

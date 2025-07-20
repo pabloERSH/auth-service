@@ -24,15 +24,15 @@ class TelegramUserAuthView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
-            user = TelegramUserAuthService.authenticate(init_data)
-            tokens = TelegramUserAuthService.generate_jwt_token(user)
+            user, tokens = TelegramUserAuthService.authenticate(init_data)
 
             response = Response(
                 {
                     'user': {
                         'telegram_id': user.telegram_id,
                         'username': user.username,
-                    }
+                    },
+                    'message': 'Authentication success!'
                 },
                 status=status.HTTP_200_OK
             )

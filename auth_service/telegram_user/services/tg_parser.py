@@ -16,7 +16,7 @@ logger = logging.getLogger('telegram_user')
 class TelegramDataParser:
     """Класс для валидации и парсинга данных WebAppInitData из Telegram Mini App."""
 
-    INITDATA_MAX_AGE = timedelta(days=1)
+    INITDATA_MAX_AGE = timedelta(hours=1)
 
     @classmethod
     def _check_hash(cls, parsedData: dict, bot_token: str) -> bool:
