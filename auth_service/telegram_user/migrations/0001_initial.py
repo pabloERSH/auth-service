@@ -7,24 +7,49 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='TelegramUser',
+            name="TelegramUser",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Date when the object was created', verbose_name='created at')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='Date when the object was last updated', verbose_name='updated at')),
-                ('telegram_id', models.BigIntegerField(unique=True)),
-                ('first_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('last_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('username', models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Date when the object was created",
+                        verbose_name="created at",
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="Date when the object was last updated",
+                        verbose_name="updated at",
+                    ),
+                ),
+                ("telegram_id", models.BigIntegerField(unique=True)),
+                ("first_name", models.CharField(blank=True, max_length=255, null=True)),
+                ("last_name", models.CharField(blank=True, max_length=255, null=True)),
+                ("username", models.CharField(blank=True, max_length=255, null=True)),
             ],
             options={
-                'db_table': 'auth_telegram_user',
-                'indexes': [models.Index(fields=['telegram_id'], name='telegram_user_telegram_id_idx')],
+                "db_table": "auth_telegram_user",
+                "indexes": [
+                    models.Index(
+                        fields=["telegram_id"], name="telegram_user_telegram_id_idx"
+                    )
+                ],
             },
         ),
     ]
