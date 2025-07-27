@@ -38,6 +38,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = get_env_variable("SECRET_KEY")
+JWT_SECRET_KEY = get_env_variable("JWT_SECRET_KEY")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -160,6 +161,8 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
+    "SIGNING_KEY": JWT_SECRET_KEY,
+    "ALGORITHM": "HS256",
     # Cookie settings
     # 'AUTH_COOKIE': 'access_token',
     # 'REFRESH_COOKIE': 'refresh_token',
