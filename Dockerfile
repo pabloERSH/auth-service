@@ -1,42 +1,54 @@
-FROM python:3.13.5-slim-bookworm
+# Builder stage
+FROM python:3.13.5-slim AS builder
 
-# Установка системных зависимостей для сборки Python-пакетов
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
+# Установка системных зависимостей, нужных для сборки некоторых библиотек
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    libpq-dev \
+    libc6-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# Установка uv - пакетного менеджера
-COPY --from=ghcr.io/astral-sh/uv:0.7.19 /uv /uvx /bin/
 
 WORKDIR /app
 
-# Настройка окружения
-ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy \
-    PYTHONUNBUFFERED=1 \
-    PATH="/app/.venv/bin:$PATH"
+COPY requirements.txt .
 
-# Копируем только файлы зависимостей сначала
-COPY pyproject.toml uv.lock ./
+# Установка библиотек
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Устанавливаем зависимости
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-install-project --no-dev
-
-# Копируем остальной код
 COPY . .
 
-# Создаем непривилегированного пользователя
-RUN useradd -m appuser && \
-    chown -R appuser:appuser /app
-USER appuser
+# Runtime stage
+FROM python:3.13.5-slim
 
-# Переходим в директорию с Django проектом
-WORKDIR /app/auth_service
+# Устанавливаем только runtime зависимости
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Открываем порт
+# Создание пользователя для безопасности
+RUN addgroup --system --gid 1000 app && \
+    adduser --system --uid 1000 --gid 1000 --home /app app
+
+WORKDIR /app
+
+# Копируем зависимости из builder
+COPY --from=builder /install /usr/local
+
+# Копируем код проекта (отфильтруется через .dockerignore)
+COPY . .
+
+# Меняем владельца
+RUN chown -R app:app /app
+
+# Переменные окружения
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Порт приложения
 EXPOSE 8000
 
-# Запускаем миграции и затем сервер gunicorn
-CMD ["sh", "-c", "uv run manage.py migrate && exec uv run gunicorn --bind 0.0.0.0:8000 --workers 3 auth_service.wsgi:application"]
+# Django проект
+WORKDIR /app/nutrition/
+
+# Команда запуска
+CMD ["gunicorn", "nutrition.wsgi:application", "--bind", "0.0.0.0:8000"]
