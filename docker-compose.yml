@@ -13,10 +13,12 @@ services:
       - api_network
 
   db:
-    image: postgres:16.4-alpine
+    image: postgres:15-alpine
     container_name: auth_service_db
     restart: unless-stopped
     env_file: .env
+    ports:
+      - "5433:5432"
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

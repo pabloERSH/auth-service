@@ -47,8 +47,7 @@ ENV PYTHONUNBUFFERED=1 \
 # Порт приложения
 EXPOSE 8000
 
-# Django проект
-WORKDIR /app/nutrition/
+WORKDIR /app/auth_service/
 
 # Команда запуска
-CMD ["gunicorn", "nutrition.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "auth_service.wsgi:application", "--bind", "0.0.0.0:8000"]
