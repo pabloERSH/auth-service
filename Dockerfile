@@ -50,4 +50,5 @@ EXPOSE 8000
 WORKDIR /app/auth_service/
 
 # Команда запуска
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "auth_service.wsgi:application", "--bind", "0.0.0.0:8000"]
