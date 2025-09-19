@@ -4,6 +4,8 @@ services:
     container_name: auth_service
     restart: unless-stopped
     env_file: .env
+    volumes:
+      - logs:/app/logs
     ports:
       - "8000:8000"
     depends_on:
@@ -35,6 +37,7 @@ services:
 
 volumes:
   postgres_data:
+  logs:
 
 networks:
   api_network:
