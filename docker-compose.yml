@@ -13,6 +13,7 @@ services:
         condition: service_healthy
     networks:
       - api_network
+      - shared-network
 
   db:
     image: postgres:15-alpine
@@ -42,3 +43,7 @@ volumes:
 networks:
   api_network:
     driver: bridge
+  
+  shared-network:
+    external: true
+    name: shared-network
