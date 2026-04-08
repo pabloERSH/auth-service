@@ -133,7 +133,7 @@
     - `initData` (строка, обязательный): Данные `initData` из Telegram Web App.
   - **Пример запроса**:
     ```bash
-    curl -X POST http://localhost:8000/api/v1/auth/login/ \
+    curl -X POST http://localhost:8000/api/v1/tguser/auth/login/ \
          -H "Content-Type: application/json" \
          -d '{"initData": "user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22John%22%2C%22last_name%22%3A%22Doe%22%2C%22username%22%3A%22johndoe%22%7D&auth_date=1698765432&hash=abc123..."}'
     ```
@@ -163,7 +163,7 @@
     - `refresh_token` (строка, обязательный): Refresh-токен для обновления.
   - **Пример запроса**:
     ```bash
-    curl -X POST http://localhost:8000/api/v1/auth/refresh/ \
+    curl -X POST http://localhost:8000/api/v1/tguser/auth/refresh/ \
          -H "Content-Type: application/json" \
          -d '{"refresh_token": "<refresh_token>"}'
     ```
