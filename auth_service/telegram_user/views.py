@@ -15,6 +15,7 @@ class TelegramUserAuthView(APIView):
     """Класс для обработки запросов на аутентификацию пользователей из Telegram Web App"""
 
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         """Аутентификация через Telegram Mini App"""
@@ -33,6 +34,8 @@ class TelegramUserAuthView(APIView):
                         "user": {
                             "telegram_id": user.telegram_id,
                             "username": user.username,
+                            "first_name": user.first_name,
+                            "last_name": user.last_name,
                         },
                         "tokens": {
                             "access": tokens["access"],
@@ -57,6 +60,7 @@ class TelegramUserRefreshTokenView(APIView):
     """Класс для обработки запросов на обновление токенов пользователей из Telegram Web App"""
 
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     """Обновление JWT токенов"""
 
@@ -77,6 +81,8 @@ class TelegramUserRefreshTokenView(APIView):
                         "user": {
                             "telegram_id": user.telegram_id,
                             "username": user.username,
+                            "first_name": user.first_name,
+                            "last_name": user.last_name,
                         },
                         "tokens": {
                             "access": new_tokens["access"],
