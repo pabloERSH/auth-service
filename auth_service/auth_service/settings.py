@@ -46,6 +46,19 @@ DEBUG = get_env_variable("DEBUG", default=False)
 
 ALLOWED_HOSTS = get_env_variable("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
 
+# 1. Доверяем CSRF-запросам с твоего туннеля (здесь протокол НУЖЕН)
+CSRF_TRUSTED_ORIGINS = [
+    "https://m7nrjktp-8080.euw.devtunnels.ms"
+]
+
+# 2. Чтобы Django понимал, что запрос пришел по HTTPS
+# Это критично, иначе Django будет пытаться делать редиректы с http на https бесконечно
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# 3. Если используешь CORS
+CORS_ALLOWED_ORIGINS = [
+    "https://m7nrjktp-8080.euw.devtunnels.ms"
+]
 
 # Application definition
 
@@ -58,6 +71,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",
     "telegram_user",
 ]
 
@@ -70,6 +84,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "auth_service.urls"
